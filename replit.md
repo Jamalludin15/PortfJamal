@@ -110,7 +110,8 @@ The application uses a comprehensive schema with the following main entities:
 
 ```
 Changelog:
-- June 28, 2025. Initial setup
+- June 28, 2025. Initial setup - Created complete fullstack portfolio with React/TypeScript frontend, Express.js backend, admin panel with CRUD operations, and authentication system
+- June 28, 2025. Fixed login issue - Updated bcrypt password hash for admin authentication to work properly
 ```
 
 ## User Preferences
