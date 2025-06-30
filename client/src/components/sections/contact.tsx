@@ -40,7 +40,7 @@ export default function Contact() {
 
   const contactMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest("POST", "/api/contacts", data);
+      return await apiRequest("POST", "/api/contact", data);
     },
     onSuccess: () => {
       toast({
@@ -48,7 +48,7 @@ export default function Contact() {
         description: "Thank you for your message. I'll get back to you soon.",
       });
       form.reset();
-      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contact"] });
     },
     onError: (error: any) => {
       toast({
