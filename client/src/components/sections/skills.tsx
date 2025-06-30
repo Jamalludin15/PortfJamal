@@ -172,6 +172,7 @@ export default function Skills() {
                         transition={{ duration: 1, delay: 0.2 }}
                         viewport={{ once: true }}
                         className={`${getBarColorClass(category)} h-2 rounded-full`}
+                        style={{ width: 0 }}
                       />
                     </div>
                   </div>
