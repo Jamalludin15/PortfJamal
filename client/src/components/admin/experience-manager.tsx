@@ -25,6 +25,14 @@ export default function ExperienceManager() {
 
   const { data: experiences = [], isLoading } = useQuery<Experience[]>({
     queryKey: ["/api/experiences"],
+    select: (data) =>
+      data.map((exp) => ({
+        ...exp,
+        technologies:
+          exp.technologies && typeof exp.technologies === "string"
+            ? JSON.parse(exp.technologies)
+            : exp.technologies || [],
+      })),
   });
 
   const form = useForm({
@@ -121,7 +129,7 @@ export default function ExperienceManager() {
       company: experience.company,
       period: experience.period,
       description: experience.description,
-      technologies: experience.technologies || [],
+      technologies: Array.isArray(experience.technologies) ? experience.technologies.join(", ") : [],
       current: experience.current || false,
     });
     setIsDialogOpen(true);
@@ -354,6 +362,8 @@ export default function ExperienceManager() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleEdit(experience)}
+                        aria-label={`Edit experience: ${experience.title} at ${experience.company}`}
+                        title="Edit experience"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -362,6 +372,8 @@ export default function ExperienceManager() {
                         size="sm"
                         onClick={() => handleDelete(experience.id)}
                         className="text-red-600 hover:text-red-700"
+                        aria-label={`Delete experience: ${experience.title} at ${experience.company}`}
+                        title="Delete experience"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

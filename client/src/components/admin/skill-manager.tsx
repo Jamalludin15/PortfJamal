@@ -59,11 +59,23 @@ export default function SkillManager() {
       resetForm();
     },
     onError: (error: any) => {
+      if (error.message?.includes("401") || error.message?.includes("Unauthorized")) {
+        toast({
+          title: "Authentication Error",
+          description: "Your session has expired. Please login again.",
+          variant: "destructive",
+        });
+        // Redirect to login after a short delay
+        setTimeout(() => {
+          window.location.href = '/admin';
+        }, 2000);
+      } else {
       toast({
         title: "Error",
         description: error.message || "Failed to create skill",
         variant: "destructive",
       });
+      }
     },
   });
 
@@ -80,11 +92,23 @@ export default function SkillManager() {
       resetForm();
     },
     onError: (error: any) => {
+      if (error.message?.includes("401") || error.message?.includes("Unauthorized")) {
+        toast({
+          title: "Authentication Error",
+          description: "Your session has expired. Please login again.",
+          variant: "destructive",
+        });
+        // Redirect to login after a short delay
+        setTimeout(() => {
+          window.location.href = '/admin';
+        }, 2000);
+      } else {
       toast({
         title: "Error",
         description: error.message || "Failed to update skill",
         variant: "destructive",
       });
+      }
     },
   });
 
@@ -100,11 +124,23 @@ export default function SkillManager() {
       queryClient.invalidateQueries({ queryKey: ["/api/skills"] });
     },
     onError: (error: any) => {
+      if (error.message?.includes("401") || error.message?.includes("Unauthorized")) {
+        toast({
+          title: "Authentication Error",
+          description: "Your session has expired. Please login again.",
+          variant: "destructive",
+        });
+        // Redirect to login after a short delay
+        setTimeout(() => {
+          window.location.href = '/admin';
+        }, 2000);
+      } else {
       toast({
         title: "Error",
         description: error.message || "Failed to delete skill",
         variant: "destructive",
       });
+      }
     },
   });
 

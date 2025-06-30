@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import type { Skill } from "@shared/schema";
+import { GalaxyBackground } from "./hero";
 
 const container = {
   hidden: { opacity: 0 },
@@ -63,10 +64,37 @@ export default function Skills() {
     return "Beginner";
   };
 
+  const getBarColorClass = (category: string) => {
+    switch (category) {
+      case "Frontend Development":
+        return "bg-blue-600";
+      case "Backend Development":
+        return "bg-emerald-600";
+      case "Database & Tools":
+        return "bg-violet-600";
+      default:
+        return "bg-primary-600";
+    }
+  };
+
+  const getIconBgClass = (category: string) => {
+    switch (category) {
+      case "Frontend Development":
+        return "bg-blue-100 dark:bg-blue-900";
+      case "Backend Development":
+        return "bg-emerald-100 dark:bg-emerald-900";
+      case "Database & Tools":
+        return "bg-violet-100 dark:bg-violet-900";
+      default:
+        return "bg-primary-100 dark:bg-primary-900";
+    }
+  };
+
   if (skills.length === 0) {
     return (
-      <section id="skills" className="py-20 bg-slate-50 dark:bg-slate-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="skills" className="py-20 relative z-10 overflow-hidden">
+        <GalaxyBackground />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center">
             <div className="h-8 w-64 bg-slate-200 dark:bg-slate-700 rounded mb-8 mx-auto animate-pulse"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -87,8 +115,9 @@ export default function Skills() {
   }
 
   return (
-    <section id="skills" className="py-20 bg-slate-50 dark:bg-slate-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="skills" className="py-20 relative z-10 overflow-hidden">
+      <GalaxyBackground />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -118,7 +147,7 @@ export default function Skills() {
               className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
             >
               <div className="flex items-center mb-4">
-                <div className={`w-12 h-12 bg-${getCategoryColor(category)}-100 dark:bg-${getCategoryColor(category)}-900 rounded-lg flex items-center justify-center mr-4 text-2xl`}>
+                <div className={`w-12 h-12 ${getIconBgClass(category)} rounded-lg flex items-center justify-center mr-4 text-2xl`}>
                   {getCategoryIcon(category)}
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
@@ -142,7 +171,7 @@ export default function Skills() {
                         whileInView={{ width: `${skill.level}%` }}
                         transition={{ duration: 1, delay: 0.2 }}
                         viewport={{ once: true }}
-                        className={`bg-${getCategoryColor(category)}-600 h-2 rounded-full`}
+                        className={`${getBarColorClass(category)} h-2 rounded-full`}
                       />
                     </div>
                   </div>

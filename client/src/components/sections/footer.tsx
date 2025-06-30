@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
-import { Github, Linkedin, Twitter, Mail } from "lucide-react";
+import { Github, Linkedin, Twitter, Mail, Instagram } from "lucide-react";
+import { SiTiktok } from "react-icons/si";
 import { scrollToSection } from "@/lib/utils";
 import type { Profile } from "@shared/schema";
 
@@ -90,9 +91,31 @@ export default function Footer() {
                   <Twitter />
                 </a>
               )}
+              {profile?.instagramUrl && (
+                <a
+                  href={profile.instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-slate-300 hover:text-primary-400 text-xl transition-colors duration-200"
+                >
+                  <Instagram />
+                </a>
+              )}
+              {profile?.tiktokUrl && (
+                <a
+                  href={profile.tiktokUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-slate-300 hover:text-primary-400 text-xl transition-colors duration-200"
+                >
+                  <SiTiktok />
+                </a>
+              )}
               {profile?.email && (
                 <a
-                  href={`mailto:${profile.email}`}
+                  href={`https://mail.google.com/mail/?view=cm&to=${profile.email}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-slate-300 hover:text-primary-400 text-xl transition-colors duration-200"
                 >
                   <Mail />
@@ -104,7 +127,7 @@ export default function Footer() {
 
         <div className="border-t border-slate-800 mt-8 pt-8 text-center">
           <p className="text-slate-400">
-            &copy; {currentYear} {profile ? `${profile.firstName} ${profile.lastName}` : "Portfolio"}. All rights reserved. Built with React, Node.js, and lots of ❤️
+            &copy; {currentYear} {profile ? `${profile.firstName} ${profile.lastName}` : "Portfolio"}. All rights reserved. Built with React, Node.js, and lots of
           </p>
         </div>
       </div>

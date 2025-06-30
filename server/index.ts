@@ -1,10 +1,18 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Serve static file uploads BEFORE other routes
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -62,9 +70,11 @@ app.use((req, res, next) => {
   const port = 5000;
   server.listen({
     port,
-    host: "0.0.0.0",
-    reusePort: true,
+    host: "localhost",
   }, () => {
     log(`serving on port ${port}`);
   });
 })();
+
+// Serve static file uploads
+// app.use("/uploads", express.static(path.join(__dirname, "uploads")));

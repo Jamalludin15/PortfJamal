@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { GraduationCap, Award } from "lucide-react";
 import type { Education } from "@shared/schema";
+import { GalaxyBackground } from "./hero";
 
 const container = {
   hidden: { opacity: 0 },
@@ -25,7 +26,8 @@ export default function Education() {
 
   if (education.length === 0) {
     return (
-      <section id="education" className="py-20 bg-white dark:bg-slate-800">
+      <section id="education" className="py-20 relative z-10 overflow-hidden">
+        <GalaxyBackground />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="h-8 w-64 bg-slate-200 dark:bg-slate-700 rounded mb-8 mx-auto animate-pulse"></div>
@@ -47,8 +49,9 @@ export default function Education() {
   }
 
   return (
-    <section id="education" className="py-20 bg-white dark:bg-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="education" className="py-20 relative z-10 overflow-hidden">
+      <GalaxyBackground />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -75,7 +78,7 @@ export default function Education() {
             <motion.div
               key={edu.id}
               variants={item}
-              className="bg-slate-50 dark:bg-slate-700 rounded-xl p-6 shadow-lg"
+              className="rounded-xl p-6 shadow-lg border border-slate-200 dark:border-slate-700 bg-transparent"
             >
               <div className="flex items-start">
                 <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">

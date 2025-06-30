@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -17,27 +17,79 @@ import {
   Mail, 
   Settings,
   Home,
-  FolderOpen
+  FolderOpen,
+  FileText,
+  DollarSign
 } from "lucide-react";
 import ProjectManager from "./project-manager";
 import SkillManager from "./skill-manager";
 import ExperienceManager from "./experience-manager";
+import EducationManager from "./education-manager";
+import PricingManager from "./pricing-manager";
+import ArticlesAdmin from "./articles-admin";
 import type { Contact, Profile } from "@shared/schema";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
+import ActivityManager from "./activity-manager";
 
 interface AdminDashboardProps {
   onLogout: () => void;
 }
 
+const profileSchema = z.object({
+  firstName: z.string().min(2, "First name is required"),
+  lastName: z.string().optional(),
+  title: z.string().min(2, "Title is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().optional(),
+  location: z.string().optional(),
+  profileImage: z.string().min(1, "Image URL is required").refine(
+    (val) => val.startsWith("/uploads/") || val.startsWith("http"),
+    { message: "Invalid image URL" }
+  ),
+  aboutTitle: z.string().min(2, "About title is required").optional(),
+  aboutDescription1: z.string().min(5, "About description is required").optional(),
+  experienceYears: z.coerce.number().min(0, "Years experience must be 0 or more"),
+  projectsCompleted: z.coerce.number().min(0, "Projects completed must be 0 or more"),
+  linkedinUrl: z.string().url("Invalid LinkedIn URL").optional(),
+  tiktokUrl: z.string().url("Invalid TikTok URL").optional(),
+  instagramUrl: z.string().url("Invalid Instagram URL").optional(),
+  contactMainHeading: z.string().optional(),
+  contactMainDescription: z.string().optional(),
+  contactSubHeading: z.string().optional(),
+  contactSubDescription: z.string().optional(),
+});
+type ProfileForm = z.infer<typeof profileSchema>;
+
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState("overview");
   const user = authManager.getUser();
 
-  const { data: profile } = useQuery<Profile>({
+  // Check authentication on component mount
+  useEffect(() => {
+    if (!authManager.isAuthenticated()) {
+      onLogout();
+      return;
+    }
+  }, [onLogout]);
+
+  // Don't render if not authenticated
+  if (!authManager.isAuthenticated()) {
+    return null;
+  }
+
+  const { data: profile, isLoading: isProfileLoading } = useQuery<Profile>({
     queryKey: ["/api/profile"],
   });
 
   const { data: contacts = [] } = useQuery<Contact[]>({
-    queryKey: ["/api/contacts"],
+    queryKey: ["/api/contact"],
   });
 
   const handleLogout = async () => {
@@ -94,7 +146,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           transition={{ duration: 0.5 }}
         >
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6">
+            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-10">
               <TabsTrigger value="overview" className="flex items-center gap-2">
                 <Settings className="h-4 w-4" />
                 <span className="hidden sm:inline">Overview</span>
@@ -115,9 +167,25 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 <Briefcase className="h-4 w-4" />
                 <span className="hidden sm:inline">Experience</span>
               </TabsTrigger>
+              <TabsTrigger value="education" className="flex items-center gap-2">
+                <GraduationCap className="h-4 w-4" />
+                <span className="hidden sm:inline">Education</span>
+              </TabsTrigger>
+              <TabsTrigger value="pricing" className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4" />
+                <span className="hidden sm:inline">Pricing</span>
+              </TabsTrigger>
+              <TabsTrigger value="activity" className="flex items-center gap-2">
+                <Award className="h-4 w-4" />
+                <span className="hidden sm:inline">Activity</span>
+              </TabsTrigger>
               <TabsTrigger value="contacts" className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
                 <span className="hidden sm:inline">Messages</span>
+              </TabsTrigger>
+              <TabsTrigger value="articles" className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                <span className="hidden sm:inline">Articles</span>
               </TabsTrigger>
             </TabsList>
 
@@ -202,23 +270,20 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               )}
             </TabsContent>
 
-            <TabsContent value="profile" className="space-y-6">
+            <TabsContent value="profile">
               <Card>
                 <CardHeader>
-                  <CardTitle>Profile Management</CardTitle>
+                  <CardTitle>Edit Profile</CardTitle>
                   <CardDescription>
                     Update your personal information and portfolio details
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8">
-                    <p className="text-slate-600 dark:text-slate-400">
-                      Profile editing functionality will be implemented here.
-                    </p>
-                    <p className="text-sm text-slate-500 dark:text-slate-500 mt-2">
-                      This would include forms to edit personal info, about section, contact details, etc.
-                    </p>
-                  </div>
+                  {isProfileLoading ? (
+                    <p>Loading profile...</p>
+                  ) : (
+                    <ProfileEditForm profile={profile} />
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -233,6 +298,18 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
             <TabsContent value="experience">
               <ExperienceManager />
+            </TabsContent>
+
+            <TabsContent value="education">
+              <EducationManager />
+            </TabsContent>
+
+            <TabsContent value="pricing">
+              <PricingManager />
+            </TabsContent>
+
+            <TabsContent value="activity">
+              <ActivityManager />
             </TabsContent>
 
             <TabsContent value="contacts" className="space-y-6">
@@ -284,9 +361,385 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            <TabsContent value="articles">
+              <ArticlesAdmin />
+            </TabsContent>
           </Tabs>
         </motion.div>
       </div>
     </div>
+  );
+}
+
+function ProfileEditForm({ profile }: { profile?: Profile }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>(profile?.profileImage || "");
+  const [tempBlobUrl, setTempBlobUrl] = useState<string>("");
+  const form = useForm<ProfileForm>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      firstName: profile?.firstName || "",
+      lastName: profile?.lastName || "",
+      title: profile?.title || "",
+      email: profile?.email || "",
+      phone: profile?.phone || "",
+      location: profile?.location || "",
+      profileImage: profile?.profileImage || "",
+      aboutTitle: profile?.aboutTitle || "",
+      aboutDescription1: profile?.aboutDescription1 || "",
+      experienceYears: profile?.experienceYears ?? 0,
+      projectsCompleted: profile?.projectsCompleted ?? 0,
+      linkedinUrl: profile?.linkedinUrl || "",
+      tiktokUrl: profile?.tiktokUrl || "",
+      instagramUrl: profile?.instagramUrl || "",
+      contactMainHeading: profile?.contactMainHeading || "",
+      contactMainDescription: profile?.contactMainDescription || "",
+      contactSubHeading: profile?.contactSubHeading || "",
+      contactSubDescription: profile?.contactSubDescription || "",
+    },
+  });
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Tampilkan preview blob sementara
+      const blobUrl = URL.createObjectURL(file);
+      setTempBlobUrl(blobUrl);
+      // Upload ke server
+      const formData = new FormData();
+      formData.append("file", file);
+      try {
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: { ...authManager.getAuthHeaders() },
+          body: formData,
+        });
+
+        // More detailed logging for debugging
+        console.log("Response Status:", res.status);
+        console.log("Response Status Text:", res.statusText);
+        console.log("Response Content-Type Header:", res.headers.get('Content-Type'));
+        
+        const responseText = await res.text();
+        console.log("Raw Server Response Text:", responseText); // Log raw server response
+
+        if (!res.ok) {
+          // Attempt to parse error as JSON, otherwise use raw text
+          try {
+            const errorData = JSON.parse(responseText);
+            throw new Error(errorData.message || "Upload failed");
+          } catch (e) {
+            throw new Error(responseText || "Upload failed");
+          }
+        }
+        
+        // Trim whitespace and remove potential BOM
+        const cleanedResponseText = responseText.trim().replace(/^\\uFEFF/, '');
+        const data = JSON.parse(cleanedResponseText);
+        setPreviewUrl(data.url);
+        setTempBlobUrl("");
+        form.setValue("profileImage", data.url, { shouldValidate: true });
+
+      } catch (err) {
+        toast({ title: "Upload failed", description: (err as any).message, variant: "destructive" });
+        setTempBlobUrl("");
+      }
+    }
+  };
+
+  const mutation = useMutation({
+    mutationFn: async (data: ProfileForm) => {
+      const res = await fetch("/api/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...authManager.getAuthHeaders(),
+        },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to update profile");
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Profile updated!", description: "Your profile has been saved." });
+      queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-6 max-w-xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="firstName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>First Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="First name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="lastName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Last Name (optional)</FormLabel>
+                <FormControl>
+                  <Input placeholder="Last name (optional)" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone</FormLabel>
+                <FormControl>
+                  <Input placeholder="Your phone number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="location"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Location</FormLabel>
+                <FormControl>
+                  <Input placeholder="Your location" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Title</FormLabel>
+              <FormControl>
+                <Input placeholder="Your title or job" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input placeholder="Your email" type="email" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="linkedinUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>LinkedIn URL</FormLabel>
+              <FormControl>
+                <Input placeholder="https://linkedin.com/in/username" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="tiktokUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>TikTok URL</FormLabel>
+              <FormControl>
+                <Input placeholder="https://tiktok.com/@username" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="instagramUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Instagram URL</FormLabel>
+              <FormControl>
+                <Input placeholder="https://instagram.com/username" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="contactMainHeading"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Contact Main Heading</FormLabel>
+              <FormControl>
+                <Input placeholder="Get In Touch" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="contactMainDescription"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Contact Main Description</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Let's discuss your next project or just say hello" rows={2} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="contactSubHeading"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Contact Sub Heading</FormLabel>
+              <FormControl>
+                <Input placeholder="Let's Start a Conversation" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="contactSubDescription"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Contact Sub Description</FormLabel>
+              <FormControl>
+                <Textarea placeholder="I'm always interested in hearing about new opportunities..." rows={3} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="profileImage"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Profile Image</FormLabel>
+              <FormControl>
+                <div className="flex flex-col gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                  />
+                  {tempBlobUrl ? (
+                    <img
+                      src={tempBlobUrl}
+                      alt="Profile Preview"
+                      className="w-32 h-32 object-cover rounded-full border"
+                    />
+                  ) : previewUrl && (
+                    <img
+                      src={previewUrl}
+                      alt="Profile Preview"
+                      className="w-32 h-32 object-cover rounded-full border"
+                    />
+                  )}
+                  <Input
+                    placeholder="https://..."
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="aboutTitle"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>About Title</FormLabel>
+              <FormControl>
+                <Input placeholder="About section title" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="aboutDescription1"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>About Description</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Short about description" rows={4} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="experienceYears"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Years Experience</FormLabel>
+              <FormControl>
+                <Input type="number" min={0} placeholder="Years of experience" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="projectsCompleted"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Projects Completed</FormLabel>
+              <FormControl>
+                <Input type="number" min={0} placeholder="Total projects completed" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button type="submit" disabled={mutation.isPending} className="w-full">
+          {mutation.isPending ? "Saving..." : "Save Profile"}
+        </Button>
+      </form>
+    </Form>
   );
 }

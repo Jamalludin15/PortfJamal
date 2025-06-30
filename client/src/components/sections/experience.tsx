@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import type { Experience } from "@shared/schema";
+import { GalaxyBackground } from "./hero";
 
 const container = {
   hidden: { opacity: 0 },
@@ -21,11 +22,20 @@ const item = {
 export default function Experience() {
   const { data: experiences = [] } = useQuery<Experience[]>({
     queryKey: ["/api/experiences"],
+    select: (data) =>
+      data.map((exp) => ({
+        ...exp,
+        technologies:
+          exp.technologies && typeof exp.technologies === "string"
+            ? JSON.parse(exp.technologies)
+            : exp.technologies || [],
+      })),
   });
 
   if (experiences.length === 0) {
     return (
-      <section id="experience" className="py-20 bg-white dark:bg-slate-800">
+      <section id="experience" className="py-20 relative z-10 overflow-hidden">
+        <GalaxyBackground />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="h-8 w-64 bg-slate-200 dark:bg-slate-700 rounded mb-8 mx-auto animate-pulse"></div>
@@ -43,8 +53,9 @@ export default function Experience() {
   }
 
   return (
-    <section id="experience" className="py-20 bg-white dark:bg-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="experience" className="py-20 relative z-10 overflow-hidden">
+      <GalaxyBackground />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}

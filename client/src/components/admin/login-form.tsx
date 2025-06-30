@@ -123,20 +123,16 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
                 >
                   {isLoading ? "Signing in..." : "Sign In"}
                 </Button>
+                <Button
+                  variant="outline"
+                  className="w-full mt-2"
+                  onClick={() => window.location.href = '/'}
+                  type="button"
+                >
+                  Kembali ke Beranda
+                </Button>
               </form>
             </Form>
-
-            <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
-              <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
-                <strong>Demo Credentials:</strong>
-              </p>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                Username: <code className="bg-slate-200 dark:bg-slate-700 px-1 rounded">admin</code>
-              </p>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                Password: <code className="bg-slate-200 dark:bg-slate-700 px-1 rounded">admin</code>
-              </p>
-            </div>
           </CardContent>
         </Card>
       </motion.div>

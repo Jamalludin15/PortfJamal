@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import type { Profile } from "@shared/schema";
+import { GalaxyBackground } from "./hero";
 
 const container = {
   hidden: { opacity: 0 },
@@ -24,7 +25,8 @@ export default function About() {
 
   if (!profile) {
     return (
-      <section id="about" className="py-20 bg-white dark:bg-slate-800">
+      <section id="about" className="py-20 relative z-10 overflow-hidden">
+        <GalaxyBackground />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="animate-pulse">
             <div className="h-8 w-64 bg-slate-200 dark:bg-slate-700 rounded mb-8 mx-auto"></div>
@@ -43,8 +45,9 @@ export default function About() {
   }
 
   return (
-    <section id="about" className="py-20 bg-white dark:bg-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="about" className="py-20 relative z-10 overflow-hidden">
+      <GalaxyBackground />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}

@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { Users, Presentation, Mic, ExternalLink } from "lucide-react";
 import type { Activity } from "@shared/schema";
+import { GalaxyBackground } from "./hero";
 
 const container = {
   hidden: { opacity: 0 },
@@ -37,20 +38,14 @@ export default function Activities() {
 
   if (activities.length === 0) {
     return (
-      <section id="activity" className="py-20 bg-slate-50 dark:bg-slate-900">
+      <section id="activity" className="py-20 relative z-10 overflow-hidden">
+        <GalaxyBackground />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="h-8 w-64 bg-slate-200 dark:bg-slate-700 rounded mb-8 mx-auto animate-pulse"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-white dark:bg-slate-800 rounded-xl p-6 animate-pulse">
-                  <div className="h-16 w-16 bg-slate-200 dark:bg-slate-700 rounded-lg mb-4"></div>
-                  <div className="space-y-3">
-                    <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded"></div>
-                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded"></div>
-                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded"></div>
-                  </div>
-                </div>
+                <div key={i} className="rounded-xl p-6 animate-pulse border border-slate-200 dark:border-slate-700 bg-transparent"></div>
               ))}
             </div>
           </div>
@@ -60,8 +55,9 @@ export default function Activities() {
   }
 
   return (
-    <section id="activity" className="py-20 bg-slate-50 dark:bg-slate-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="activity" className="py-20 relative z-10 overflow-hidden">
+      <GalaxyBackground />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -88,7 +84,7 @@ export default function Activities() {
             <motion.div
               key={activity.id}
               variants={item}
-              className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
+              className="rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-slate-200 dark:border-slate-700 bg-transparent"
             >
               <div className={`w-16 h-16 bg-${getIconColor(index)}-100 dark:bg-${getIconColor(index)}-900 rounded-lg flex items-center justify-center mb-4 text-${getIconColor(index)}-600 dark:text-${getIconColor(index)}-400`}>
                 {getIcon(activity.title)}

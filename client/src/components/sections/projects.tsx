@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, Github } from "lucide-react";
 import type { Project } from "@shared/schema";
+import { GalaxyBackground } from "./hero";
 
 const container = {
   hidden: { opacity: 0 },
@@ -23,24 +24,26 @@ const item = {
 export default function Projects() {
   const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
+    select: (data) =>
+      data.map((project) => ({
+        ...project,
+        technologies:
+          project.technologies && typeof project.technologies === "string"
+            ? JSON.parse(project.technologies)
+            : project.technologies || [],
+      })),
   });
 
   if (projects.length === 0) {
     return (
-      <section id="projects" className="py-20 bg-slate-50 dark:bg-slate-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="projects" className="py-20 relative z-10 overflow-hidden">
+        <GalaxyBackground />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center">
             <div className="h-8 w-64 bg-slate-200 dark:bg-slate-700 rounded mb-8 mx-auto animate-pulse"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-white dark:bg-slate-800 rounded-xl overflow-hidden animate-pulse">
-                  <div className="h-48 bg-slate-200 dark:bg-slate-700"></div>
-                  <div className="p-6 space-y-4">
-                    <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded"></div>
-                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded"></div>
-                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded"></div>
-                  </div>
-                </div>
+                <div key={i} className="rounded-xl p-6 animate-pulse border border-slate-200 dark:border-slate-700 bg-transparent"></div>
               ))}
             </div>
           </div>
@@ -50,8 +53,9 @@ export default function Projects() {
   }
 
   return (
-    <section id="projects" className="py-20 bg-slate-50 dark:bg-slate-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="projects" className="py-20 relative z-10 overflow-hidden">
+      <GalaxyBackground />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -78,7 +82,7 @@ export default function Projects() {
             <motion.div
               key={project.id}
               variants={item}
-              className="bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2"
+              className="rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-slate-200 dark:border-slate-700 bg-transparent"
             >
               {project.image && (
                 <img

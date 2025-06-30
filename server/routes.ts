@@ -5,13 +5,56 @@ import bcrypt from "bcryptjs";
 import {
   insertSkillSchema, insertExperienceSchema, insertProjectSchema,
   insertEducationSchema, insertActivitySchema, insertContactSchema,
-  insertProfileSchema
+  insertProfileSchema, insertArticleSchema, insertPricingSchema
 } from "@shared/schema";
 import { z } from "zod";
+import { fromZodError } from "zod-validation-error";
+import multer from "multer";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const loginSchema = z.object({
   username: z.string(),
   password: z.string()
+});
+
+// Custom article schema that handles date string conversion
+const articleSchema = z.object({
+  title: z.string().optional(),
+  content: z.string().optional(),
+  excerpt: z.string().optional(),
+  image: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  published: z.boolean().optional(),
+  createdAt: z.union([
+    z.string().transform((val) => new Date(val)),
+    z.date()
+  ]).optional(),
+  updatedAt: z.union([
+    z.string().transform((val) => new Date(val)),
+    z.date()
+  ]).optional(),
+});
+
+// Konfigurasi multer untuk upload ke folder uploads
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, path.join(__dirname, "uploads"));
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const ext = path.extname(file.originalname);
+      cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+    }
+  }),
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) cb(null, true);
+    else cb(new Error("Only image files are allowed!"));
+  }
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -67,7 +110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(profile);
   });
 
-  app.put("/api/profile", requireAuth, async (req, res) => {
+  app.put("/api/profile", requireAuth, async (req: any, res: any) => {
     try {
       const profileData = insertProfileSchema.parse(req.body);
       const profile = await storage.updateProfile(profileData);
@@ -163,6 +206,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const project = await storage.createProject(projectData);
       res.json(project);
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: fromZodError(error).toString() });
+      }
       res.status(400).json({ message: "Invalid project data" });
     }
   });
@@ -174,6 +220,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const project = await storage.updateProject(id, projectData);
       res.json(project);
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: fromZodError(error).toString() });
+      }
       res.status(400).json({ message: "Invalid project data" });
     }
   });
@@ -263,12 +312,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Contact routes
-  app.get("/api/contacts", requireAuth, async (req, res) => {
+  app.get("/api/contact", requireAuth, async (req, res) => {
     const contacts = await storage.getContacts();
     res.json(contacts);
   });
 
-  app.post("/api/contacts", async (req, res) => {
+  app.post("/api/contact", async (req, res) => {
     try {
       const contactData = insertContactSchema.parse(req.body);
       const contact = await storage.createContact(contactData);
@@ -278,7 +327,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/contacts/:id", requireAuth, async (req, res) => {
+  app.delete("/api/contact/:id", requireAuth, async (req, res) => {
     const id = parseInt(req.params.id);
     const deleted = await storage.deleteContact(id);
     if (deleted) {
@@ -286,6 +335,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } else {
       res.status(404).json({ message: "Contact not found" });
     }
+  });
+
+  // Articles routes
+  app.get("/api/articles", async (req, res) => {
+    const articles = await storage.getPublishedArticles();
+    res.json(articles);
+  });
+
+  app.get("/api/articles/all", requireAuth, async (req, res) => {
+    const articles = await storage.getArticles();
+    res.json(articles);
+  });
+
+  app.get("/api/articles/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const article = await storage.getArticle(id);
+      if (!article) {
+        res.status(404).json({ message: "Article not found" });
+        return;
+      }
+      res.json(article);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid article ID" });
+    }
+  });
+
+  app.post("/api/articles", requireAuth, async (req, res) => {
+    try {
+      const articleData = articleSchema.parse(req.body);
+      const article = await storage.createArticle(articleData);
+      res.json(article);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid article data" });
+    }
+  });
+
+  app.put("/api/articles/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const articleData = articleSchema.parse(req.body);
+      const article = await storage.updateArticle(id, articleData);
+      res.json(article);
+    } catch (error) {
+      res.status(400).json({ message: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.delete("/api/articles/:id", requireAuth, async (req, res) => {
+    const id = parseInt(req.params.id);
+    const deleted = await storage.deleteArticle(id);
+    if (deleted) {
+      res.json({ message: "Article deleted successfully" });
+    } else {
+      res.status(404).json({ message: "Article not found" });
+    }
+  });
+
+  // Pricing routes
+  app.get("/api/pricing", async (req, res) => {
+    const pricing = await storage.getPricing();
+    res.json(pricing);
+  });
+
+  app.post("/api/pricing", requireAuth, async (req, res) => {
+    try {
+      const pricingData = insertPricingSchema.parse(req.body);
+      const pricing = await storage.createPricing(pricingData);
+      res.json(pricing);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid pricing data" });
+    }
+  });
+
+  app.put("/api/pricing/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const pricingData = insertPricingSchema.partial().parse(req.body);
+      const pricing = await storage.updatePricing(id, pricingData);
+      res.json(pricing);
+    } catch (error) {
+      res.status(400).json({ message: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.delete("/api/pricing/:id", requireAuth, async (req, res) => {
+    const id = parseInt(req.params.id);
+    const deleted = await storage.deletePricing(id);
+    if (deleted) {
+      res.json({ message: "Pricing deleted successfully" });
+    } else {
+      res.status(404).json({ message: "Pricing not found" });
+    }
+  });
+
+  // Endpoint upload gambar (rewrite)
+  app.post("/api/upload", requireAuth, (req: any, res: any) => {
+    upload.single("file")(<any>req, <any>res, (err: any) => {
+      if (err) {
+        return res.status(400).json({ message: err.message || "Upload error" });
+      }
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      const fileUrl = `/uploads/${req.file.filename}`;
+      res.status(200).json({ url: fileUrl });
+    });
   });
 
   const httpServer = createServer(app);

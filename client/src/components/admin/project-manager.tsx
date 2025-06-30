@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,9 +22,20 @@ export default function ProjectManager() {
   const queryClient = useQueryClient();
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [tempBlobUrl, setTempBlobUrl] = useState<string>("");
 
   const { data: projects = [], isLoading } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
+    select: (data) =>
+      data.map((project) => ({
+        ...project,
+        technologies:
+          project.technologies && typeof project.technologies === "string"
+            ? JSON.parse(project.technologies)
+            : project.technologies || [],
+      })),
   });
 
   const form = useForm({
@@ -122,7 +133,7 @@ export default function ProjectManager() {
       title: project.title,
       description: project.description,
       image: project.image || "",
-      technologies: project.technologies || [],
+      technologies: Array.isArray(project.technologies) ? project.technologies.join(", ") : [],
       liveUrl: project.liveUrl || "",
       githubUrl: project.githubUrl || "",
       featured: project.featured || false,
@@ -149,6 +160,35 @@ export default function ProjectManager() {
       updateMutation.mutate({ id: editingProject.id, data: formData });
     } else {
       createMutation.mutate(formData);
+    }
+  };
+
+  // Handler untuk file input gambar project
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Tampilkan preview blob sementara
+      const blobUrl = URL.createObjectURL(file);
+      setTempBlobUrl(blobUrl);
+      // Upload ke server
+      const formData = new FormData();
+      formData.append("file", file);
+      try {
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: authManager.getAuthHeaders(),
+          body: formData,
+        });
+        if (!res.ok) throw new Error("Upload failed");
+        const data = await res.json();
+        // Simpan hanya path relatif (data.url)
+        setPreviewUrl(data.url);
+        setTempBlobUrl(""); // Hapus blob setelah upload sukses
+        form.setValue("image", data.url, { shouldValidate: true });
+      } catch (err) {
+        toast({ title: "Upload failed", description: (err as any).message, variant: "destructive" });
+        setTempBlobUrl("");
+      }
     }
   };
 
@@ -234,9 +274,34 @@ export default function ProjectManager() {
                   name="image"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Image URL</FormLabel>
+                      <FormLabel>Image</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://example.com/image.jpg" {...field} />
+                        <div className="flex flex-col gap-2">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                          />
+                          {tempBlobUrl ? (
+                            <img
+                              src={tempBlobUrl}
+                              alt="Project Preview"
+                              className="w-full h-32 object-cover rounded border"
+                            />
+                          ) : (previewUrl || field.value) && (
+                            <img
+                              src={previewUrl || field.value}
+                              alt="Project Preview"
+                              className="w-full h-32 object-cover rounded border"
+                            />
+                          )}
+                          <Input
+                            placeholder="https://example.com/image.jpg"
+                            value={field.value}
+                            onChange={field.onChange}
+                          />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
