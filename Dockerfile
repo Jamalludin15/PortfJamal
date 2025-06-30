@@ -14,7 +14,6 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/server ./server
 COPY --from=builder /app/shared ./shared
 COPY --from=builder /app/migrations ./migrations
-COPY --from=builder /app/client/public ./client/public
 ENV NODE_ENV=production
 EXPOSE 5000
 CMD ["node", "dist/index.js"] 
