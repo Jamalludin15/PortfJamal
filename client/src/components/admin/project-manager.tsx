@@ -133,7 +133,7 @@ export default function ProjectManager() {
       title: project.title,
       description: project.description,
       image: project.image || "",
-      technologies: Array.isArray(project.technologies) ? project.technologies.join(", ") : [],
+      technologies: Array.isArray(project.technologies) ? project.technologies.join(", ") : "",
       liveUrl: project.liveUrl || "",
       githubUrl: project.githubUrl || "",
       featured: project.featured || false,
@@ -151,9 +151,9 @@ export default function ProjectManager() {
     // Parse technologies from comma-separated string to array
     const formData = {
       ...data,
-      technologies: typeof data.technologies === 'string' 
-        ? data.technologies.split(',').map(t => t.trim()).filter(Boolean)
-        : data.technologies || []
+      technologies: typeof data.technologies === "string"
+        ? data.technologies.split(',').map((t: string) => t.trim()).filter(Boolean)
+        : data.technologies || [],
     };
 
     if (editingProject) {
@@ -453,9 +453,14 @@ export default function ProjectManager() {
                     {project.description}
                   </p>
                   
-                  {project.technologies && project.technologies.length > 0 && (
+                  {project.technologies && (
                     <div className="flex flex-wrap gap-1 mb-4">
-                      {project.technologies.map((tech, index) => (
+                      {(Array.isArray(project.technologies)
+                        ? project.technologies
+                        : typeof project.technologies === "string" && project.technologies.length > 0
+                          ? JSON.parse(project.technologies)
+                          : []
+                      ).map((tech: string, index: number) => (
                         <Badge key={index} variant="outline" className="text-xs">
                           {tech}
                         </Badge>
