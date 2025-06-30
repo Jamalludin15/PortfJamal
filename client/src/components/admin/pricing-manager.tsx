@@ -149,11 +149,7 @@ export default function PricingManager() {
       period: pricing.period,
       title: pricing.title,
       description: pricing.description,
-      features: Array.isArray(pricing.features)
-        ? pricing.features.join(", ")
-        : typeof pricing.features === "string"
-          ? JSON.parse(pricing.features).join(", ")
-          : "",
+      features: Array.isArray(pricing.features) ? pricing.features.join(", ") : [],
       isActive: pricing.isActive,
       isPremium: pricing.isPremium,
     });
@@ -171,8 +167,8 @@ export default function PricingManager() {
       ...data,
       price: Number(data.price),
       features: typeof data.features === 'string'
-        ? data.features.split(',').map((f: string) => f.trim()).filter(Boolean)
-        : data.features || [],
+        ? data.features.split(',').map(f => f.trim()).filter(Boolean)
+        : data.features || []
     };
 
     if (editingPricing) {
@@ -445,16 +441,11 @@ export default function PricingManager() {
               <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">
                 {pricing.description}
               </p>
-              {pricing.features && (
+              {pricing.features && pricing.features.length > 0 && (
                 <div>
                   <h4 className="text-sm font-medium text-slate-900 dark:text-white mb-2">Features:</h4>
                   <ul className="space-y-1">
-                    {(Array.isArray(pricing.features)
-                      ? pricing.features
-                      : typeof pricing.features === "string" && pricing.features.length > 0
-                        ? JSON.parse(pricing.features)
-                        : []
-                    ).map((feature: string, index: number) => (
+                    {pricing.features.map((feature, index) => (
                       <li key={index} className="text-sm text-slate-600 dark:text-slate-400 flex items-center">
                         <div className="w-1.5 h-1.5 bg-primary rounded-full mr-2"></div>
                         {feature}
