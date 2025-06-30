@@ -14,7 +14,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Serve static file uploads BEFORE other routes
-app.use("/uploads", express.static(path.join(__dirname, "..", "dist", "uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const uploadsDir = path.join(__dirname, "..", "dist", "uploads");
 if (!fs.existsSync(uploadsDir)) {
