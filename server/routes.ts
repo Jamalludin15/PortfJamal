@@ -343,7 +343,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(articles);
   });
 
-  app.get("/api/articles/all", requireAuth, async (req, res) => {
+  app.get("/api/articles/all", async (req, res) => {
     const articles = await storage.getArticles();
     res.json(articles);
   });
