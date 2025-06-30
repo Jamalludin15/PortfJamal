@@ -40,7 +40,7 @@ export default function Contact() {
 
   const contactMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest("POST", "/api/contacts", data);
+      return await apiRequest("POST", "/api/contact", data);
     },
     onSuccess: () => {
       toast({
